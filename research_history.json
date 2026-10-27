@@ -1,69 +1,276 @@
 [
   {
-    "query": "Deep Learning",
-    "timestamp": "2025-04-05T09:36:14.259117",
-    "key_concepts": [
-      "Deep Learning",
-      "Neural Networks",
-      "CNN Architectures",
-      "Applications of Deep Learning",
-      "Research Directions",
-      "Taxonomy of Deep Learning Techniques",
-      "Techniques and Taxonomy",
-      "Convolutional Neural Networks (CNNs)",
-      "Research Directions in Deep Learning"
-    ],
+    "query": "heart disease prediction system",
+    "timestamp": "2026-09-24T11:41:52.002479",
+    "key_concepts": [],
     "top_sources": [
       {
-        "title": "Deep Learning: A Comprehensive Overview on Techniques ...",
-        "url": "https://link.springer.com/article/10.1007/s42979-021-00815-1",
-        "score": 0.9325
+        "title": "Research of Heart Disease Prediction Based on Machine Learning | Semantic Scholar",
+        "url": "https://www.semanticscholar.org/paper/Research-of-Heart-Disease-Prediction-Based-on-Ouyang/729d1cd5d8690f7c40834712f892dee7ccfc5be7",
+        "score": 0.7053
       },
       {
-        "title": "Deep Learning: A Comprehensive Overview on Techniques ...",
-        "url": "https://link.springer.com/article/10.1007/s42979-021-00815-1",
-        "score": 0.9325
+        "title": "(PDF) A Heart Disease Prediction Model using Decision Tree",
+        "url": "https://www.academia.edu/117890695/A_Heart_Disease_Prediction_Model_using_Decision_Tree",
+        "score": 0.63
       },
       {
-        "title": "Deep Learning: A Comprehensive Overview on Techniques ...",
-        "url": "https://link.springer.com/article/10.1007/s42979-021-00815-1",
-        "score": 0.8934500000000001
+        "title": "[PDF] Robust Cardiovascular Disease Prediction Using Logistic Regression",
+        "url": "https://soar.wichita.edu/server/api/core/bitstreams/8d508e1f-9e2f-4ffc-b7c8-fd63e59daee0/content",
+        "score": 0.63
       }
     ],
-    "summary": "Across the three research iterations, the understanding of deep learning evolved from a broad introduction to the field, including its techniques and applications, to a more in-depth analysis of specific architectures such as CNNs and their roles in various applications. The importance of understanding the concepts, techniques, and taxonomy of deep learning was consistently highlighted. The research findings showed a progression from general overviews to more specialized and technical insights, "
+    "summary": "Error in meta-review: Error code: 404 - {'error': {'message': 'The model `llama-3.1-8b-instant` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
   },
   {
-    "query": "LLM for Image ",
-    "timestamp": "2025-04-26T20:24:01.410315",
+    "query": "find the research paper of diabetes prediction system give the dataset, evaluation metrics, and key result in numerical",
+    "timestamp": "2026-09-24T11:43:21.049883",
+    "key_concepts": [],
+    "top_sources": [
+      {
+        "title": "Advances in artificial intelligence for diabetes prediction",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0933365725000673",
+        "score": 0.7309500000000001
+      },
+      {
+        "title": "(PDF) Performance evaluation of supervised machine learning algorithms for diabetes prediction",
+        "url": "https://www.researchgate.net/publication/400106080_Performance_evaluation_of_supervised_machine_learning_algorithms_for_diabetes_prediction",
+        "score": 0.6900000000000001
+      },
+      {
+        "title": "Advances in artificial intelligence for diabetes prediction",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0933365725000673",
+        "score": 0.6900000000000001
+      }
+    ],
+    "summary": "Error in meta-review: Error code: 404 - {'error': {'message': 'The model `llama-3.1-8b-instant` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+  },
+  {
+    "query": "heart disease prediction system",
+    "timestamp": "2026-09-24T11:46:28.844588",
+    "key_concepts": [],
+    "top_sources": [
+      {
+        "title": "[PDF] Robust Cardiovascular Disease Prediction Using Logistic Regression",
+        "url": "https://soar.wichita.edu/server/api/core/bitstreams/8d508e1f-9e2f-4ffc-b7c8-fd63e59daee0/content",
+        "score": 0.63
+      },
+      {
+        "title": "[PDF] Heart Disease Prediction Using Machine Learning",
+        "url": "https://zenodo.org/records/15359269/files/16-AJ3544.pdf?download=1",
+        "score": 0.63
+      },
+      {
+        "title": "[PDF] A Gradient Boosting Approach with L1-Regularized Neural Networks",
+        "url": "https://mdakilraihaniftee.github.io/assets/pdf/next-gen_.pdf",
+        "score": 0.63
+      }
+    ],
+    "summary": "Error in meta-review: Error code: 404 - {'error': {'message': 'The model `llama-3.1-8b-instant` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+  },
+  {
+    "query": "heart disease prediction system",
+    "timestamp": "2026-09-24T11:51:00.511736",
+    "key_concepts": [],
+    "top_sources": [
+      {
+        "title": "Research of Heart Disease Prediction Based on Machine Learning | Semantic Scholar",
+        "url": "https://www.semanticscholar.org/paper/Research-of-Heart-Disease-Prediction-Based-on-Ouyang/729d1cd5d8690f7c40834712f892dee7ccfc5be7",
+        "score": 0.7053
+      },
+      {
+        "title": "[PDF] Robust Cardiovascular Disease Prediction Using Logistic Regression",
+        "url": "https://soar.wichita.edu/server/api/core/bitstreams/8d508e1f-9e2f-4ffc-b7c8-fd63e59daee0/content",
+        "score": 0.63
+      },
+      {
+        "title": "[PDF] Heart Disease Prediction Using Machine Learning",
+        "url": "https://zenodo.org/records/15359269/files/16-AJ3544.pdf?download=1",
+        "score": 0.63
+      }
+    ],
+    "summary": "Error in meta-review: Error code: 404 - {'error': {'message': 'The model `llama-3.1-8b-instant` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+  },
+  {
+    "query": "malicious URL",
+    "timestamp": "2026-10-04T00:12:47.594255",
+    "key_concepts": [],
+    "top_sources": [
+      {
+        "title": "Phishing URL detection using machine learning methods",
+        "url": "https://www.sciencedirect.com/science/article/abs/pii/S0965997822001892",
+        "score": 0.7350000000000001
+      },
+      {
+        "title": "Malicious URL protection based on attackers' habitual ...",
+        "url": "https://www.sciencedirect.com/science/article/abs/pii/S0167404818300348",
+        "score": 0.7120500000000001
+      },
+      {
+        "title": "Multiclass Classification of Malicious URL Detection Using ...",
+        "url": "https://ieeexplore.ieee.org/document/10303595",
+        "score": 0.69135
+      }
+    ],
+    "summary": "Error in meta-review: Error code: 404 - {'error': {'message': 'The model `llama-3.1-8b-instant` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+  },
+  {
+    "query": "malicious URL",
+    "timestamp": "2026-10-04T00:24:56.192952",
     "key_concepts": [
-      "Large Language Models (LLMs)",
-      "Image Understanding",
-      "Visual Data Representation",
-      "Scalable Vector Graphics (SVG)",
-      "Computer Vision",
-      "Multimodal Learning",
-      "Vision Transformers",
-      "Cross-Modality Learning",
-      "Image Generation",
-      "Visual Understanding"
+      "Machine\u2011learning classifiers (RF, DT, k\u2011NN, NB, SVM)",
+      "Deep\u2011learning architectures (LSTM, Bi\u2011LSTM, Transformer, GNN, LLM)",
+      "Feature engineering & behavioral analysis of attackers",
+      "Large\u2011scale malicious\u2011URL datasets (e.g., 1.5\u202fM URLs from Tier\u20111 ISP)",
+      "Taxonomy / modality\u2011based classification of detection techniques",
+      "Real\u2011time / online learning and unsupervised anomaly detection",
+      "Threat\u2011intelligence integration",
+      "Priority\u2011coefficient and feature\u2011evaluation frameworks",
+      "Malicious URL detection",
+      "Deep learning models (LSTM, Bi\u2011LSTM, Transformers, GNNs, LLMs)"
     ],
     "top_sources": [
       {
-        "title": "An Investigation on LLMs' Visual Understanding Ability Using SVG ...",
-        "url": "https://arxiv.org/html/2306.06094v2",
-        "score": 0.877
+        "title": "Multiclass Classification of Malicious URL Detection Using Machine Learning and Deep Learning",
+        "url": "https://ieeexplore.ieee.org/document/10303595",
+        "score": 0.6900000000000001
       },
       {
-        "title": "Multimodal Large Language Models for Image, Text, and Speech ...",
-        "url": "https://arxiv.org/html/2501.18648v2",
+        "title": "From Past to Present: A Survey of Malicious URL Detection Techniques, Datasets and Code Repositories",
+        "url": "https://arxiv.org/html/2504.16449v2",
+        "score": 0.6900000000000001
+      },
+      {
+        "title": "A Review on Malicious URLs Detection Using Machine ...",
+        "url": "https://www.researchgate.net/publication/376707228_A_Review_on_Malicious_URLs_Detection_Using_Machine_Learning_Methods",
+        "score": 0.6900000000000001
+      }
+    ],
+    "summary": "Across the three review cycles the literature moves from early signature\u2011 and blacklist\u2011centric approaches toward increasingly sophisticated data\u2011driven methods. Initial works emphasized handcrafted lexical and host\u2011based features coupled with classic classifiers (RF, DT, SVM). Subsequent cycles introduced richer behavioral and network\u2011level cues, multimodal taxonomies, and hybrid ensembles that weight features by priority coefficients. Parallel to this feature evolution, deep learning progresse"
+  },
+  {
+    "query": "diabetes prediction system",
+    "timestamp": "2026-10-04T00:30:58.400871",
+    "key_concepts": [
+      "Machine learning classifiers (Gradient Boosting, Random Forest, SVM, Logistic Regression, Voting Ensembles)",
+      "Explainable AI (XAI) for model interpretability",
+      "Feature selection techniques (mutual information, statistical methods)",
+      "Class\u2011imbalance handling (SMOTE, oversampling)",
+      "Web\u2011based / clinical decision support platforms",
+      "Pediatric and multi\u2011population datasets",
+      "Semi\u2011supervised and deep learning approaches (GRU, self\u2011attention)",
+      "Performance metrics (accuracy, ROC\u2011AUC, precision, recall)",
+      "Integration with bioinformatics and IoT health monitoring",
+      "Machine learning classifiers (Gradient Boosting, Random Forest, SVM, Logistic Regression, XGBoost)"
+    ],
+    "top_sources": [
+      {
+        "title": "Diabetes Prediction Model Using Machine Learning ...",
+        "url": "https://ieeexplore.ieee.org/iel8/11688152/11688179/11688589.pdf",
+        "score": 0.6900000000000001
+      },
+      {
+        "title": "(PDF) Diabetes Prediction using Machine Learning and ...",
+        "url": "https://www.researchgate.net/publication/383088399_Diabetes_Prediction_using_Machine_Learning_and_Explainable_Artificial_Intelligence_Techniques",
+        "score": 0.6900000000000001
+      },
+      {
+        "title": "Predictive Analytics in Healthcare for Diabetes Prediction",
+        "url": "https://www.semanticscholar.org/paper/Predictive-Analytics-in-Healthcare-for-Diabetes-Zafar-Raza/ee18f83f2b27e43dda39b152642fb87ca3e7f6ba",
+        "score": 0.6900000000000001
+      }
+    ],
+    "summary": "Cycle\u202f1 offered no empirical input, serving only as a placeholder. Cycle\u202f2 introduced a breadth of concepts\u2014classical classifiers, ensemble/boosting, feature selection, SMOTE, XAI, and IoT\u2011enabled platforms\u2014while highlighting performance (\u224887\u202f% accuracy for Gradient Boosting) and emerging trends such as explainability and pediatric datasets. Cycle\u202f3 reinforced these themes, adding XGBoost, deeper emphasis on ensemble methods, and reiterating the same gaps (single\u2011site validation, limited demogra"
+  },
+  {
+    "query": "heart disease prediction system",
+    "timestamp": "2026-10-04T00:49:15.210390",
+    "key_concepts": [],
+    "top_sources": [
+      {
+        "title": "Optimizing heart disease diagnosis with advanced machine learning models: a comparison of predictive performance | BMC Cardiovascular Disorders | Springer Nature Link",
+        "url": "https://link.springer.com/article/10.1186/s12872-025-04627-6",
         "score": 0.87
       },
       {
-        "title": "An Investigation on LLMs' Visual Understanding Ability Using SVG ...",
-        "url": "https://arxiv.org/html/2306.06094v2",
-        "score": 0.8494999999999999
+        "title": "A systematic review of machine learning in heart disease prediction",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12614364",
+        "score": 0.8654000000000001
+      },
+      {
+        "title": "(PDF) Heart Disease Prediction Using Machine Learning",
+        "url": "https://www.researchgate.net/publication/351545128_Heart_Disease_Prediction_Using_Machine_Learning",
+        "score": 0.865
       }
     ],
-    "summary": "The understanding of using Large Language Models (LLMs) for image tasks has evolved significantly across iterations. Initially, the focus was on exploring LLMs' ability to understand and interpret visual data, including images. As research progressed, the emphasis shifted to fine-tuning LLMs for specific image classification tasks, object detection, and image generation. The findings consistently highlighted the potential of LLMs in image analysis, with notable improvements in accuracy and effic"
+    "summary": "Error in meta-review: Error code: 413 - {'error': {'message': 'Request too large for model `openai/gpt-oss-120b` in organization `org_01m3910vh5egd8vz6gbtzn5ecy` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Requested 8543, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+  },
+  {
+    "query": "heart disease prediction system",
+    "timestamp": "2026-10-04T01:11:34.316099",
+    "key_concepts": [
+      "deep learning",
+      "InceptionNet",
+      "Convolutional Neural Network (1D CNN)",
+      "Random Forest",
+      "ensemble learning",
+      "logistic regression",
+      "K-Nearest Neighbors (KNN)",
+      "Artificial Neural Network (ANN)",
+      "Support Vector Machine (SVM)",
+      "Na\u00efve Bayes"
+    ],
+    "top_sources": [
+      {
+        "title": "Interactive cardiovascular disease prediction system using learning techniques: Insights from extensive experiments",
+        "url": "https://www.sciencedirect.com/science/article/pii/S2666720725000463",
+        "score": 0.877
+      },
+      {
+        "title": "Sustainable and interpretable heart disease prediction: a clinical decision support approach for biomedical healthcare applications | Scientific Reports",
+        "url": "https://www.nature.com/articles/s41598-026-37840-0",
+        "score": 0.8587999999999999
+      },
+      {
+        "title": "A systematic review of machine learning in heart disease prediction",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12614364",
+        "score": 0.85385
+      }
+    ],
+    "summary": "Across the three iterative cycles the focus sharpened from a broad collection of deep\u2011learning (InceptionNet, 1D\u2011CNN) and ensemble (Random Forest) approaches toward a more systematic inclusion of preprocessing (standard scaling) and a wider palette of traditional classifiers (logistic regression, KNN, SVM, Na\u00efve Bayes, decision trees, ANN).  By the third cycle the authors explicitly highlighted interpretability alongside predictive performance, reflecting a shift from pure accuracy\u2011driven experi"
+  },
+  {
+    "query": "malicious URL",
+    "timestamp": "2026-10-24T20:46:32.286057",
+    "key_concepts": [
+      "Malicious URL detection",
+      "Machine learning classifiers (SVM, LightGBM, Logistic Regression, Random Forest, J48, AdaBoost)",
+      "Lexical and content\u2011based feature extraction",
+      "Benchmark datasets (ISCXURL2016, other publicly available URL corpora)",
+      "Survey of techniques, datasets, and code repositories",
+      "Static analysis of malicious JavaScript\u2011bearing PDFs",
+      "Ensemble learning and boosting",
+      "Standardized benchmarking and baseline comparisons",
+      "Machine\u2011learning classifiers (SVM, LightGBM, Logistic Regression, AdaBoost, Random Forest, J48, Lazy algorithm, Bayes net)",
+      "Feature engineering (lexical features, static analysis of JavaScript in PDFs)"
+    ],
+    "top_sources": [
+      {
+        "title": "From past to present: A survey of malicious URL detection techniques, datasets and code repositories",
+        "url": "https://www.sciencedirect.com/science/article/abs/pii/S1574013725000863",
+        "score": 0.8925
+      },
+      {
+        "title": "From past to present: A survey of malicious URL detection techniques, datasets and code repositories",
+        "url": "https://www.sciencedirect.com/science/article/pii/S1574013725000863",
+        "score": 0.8925
+      },
+      {
+        "title": "A Survey of Malicious URL Detection Techniques, Datasets ...",
+        "url": "https://arxiv.org/pdf/2504.16449",
+        "score": 0.87595
+      }
+    ],
+    "summary": "Across the three research cycles the community\u2019s view of malicious URL detection has deepened from early static analyses of JavaScript\u2011laden PDFs toward a richer machine\u2011learning ecosystem. Initial work highlighted lexical and content\u2011based feature extraction using classic classifiers (SVM, Random Forest, J48). Subsequent cycles expanded the classifier palette (adding LightGBM, AdaBoost, Bayes Net, lazy algorithms) and emphasized broader feature engineering, including static analysis of PDFs and"
   }
 ]

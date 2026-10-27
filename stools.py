@@ -1,21 +1,30 @@
 import os
 import json
 import re
+import requests
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.memory import ConversationBufferMemory
+from langchain_classic.memory import ConversationBufferMemory
 from langchain_core.output_parsers import JsonOutputParser
 from tavily import TavilyClient
-from langchain.tools import Tool
-from langchain.agents import AgentExecutor, create_react_agent
+from langchain_classic.tools import Tool
+from langchain_classic.agents import AgentExecutor, create_react_agent
 from langchain_core.prompts import PromptTemplate
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+
+
+def _env_value(name: str, default: str = "") -> str:
+    """Read an environment value and drop quotes or surrounding spaces."""
+    value = os.getenv(name, default)
+    if value is None:
+        return default
+    return value.strip().strip('"').strip("'")
 
 # Configuration constants loaded from environment variables
 MAX_HISTORY = int(os.getenv("MAX_HISTORY", "10"))
@@ -23,13 +32,24 @@ DEFAULT_ITERATIONS = int(os.getenv("DEFAULT_ITERATIONS", "3"))
 HISTORY_FILE = os.getenv("HISTORY_FILE", "research_history.json")
 FEEDBACK_FILE = os.getenv("FEEDBACK_FILE", "feedback_history.json")
 
+def _report_progress(on_progress, progress: float, step: str) -> None:
+    """Send a research progress update when a caller supplied a callback."""
+    if on_progress is None:
+        return
+    try:
+        on_progress(progress, step)
+    except Exception as exc:
+        print(f"Progress callback failed: {exc}")
+
+
 # Domain categorization for source classification
 # Used to categorize search results into academic or general sources
 SOURCES = {
     "academic": [
         "arxiv.org", "link.springer.com", "ieeexplore.ieee.org",
         "aclanthology.org", "dl.acm.org", "researchgate.net",
-        "semanticscholar.org", "sciencedirect.com", "academic.oup.com"
+        "semanticscholar.org", "sciencedirect.com", "academic.oup.com",
+        "doi.org", "openalex.org"
     ],
     "general": [
         "towardsdatascience.com", "techcrunch.com", "wired.com",
@@ -78,13 +98,13 @@ class SupervisorAgent:
         """Initialize the supervisor agent with necessary components."""
         # Initialize LLM with API key from environment variables
         self.llm = ChatGroq(
-            api_key=os.getenv("GROQ_API_KEY"),
-            model=os.getenv("MODEL_NAME", "llama-3.3-70b-versatile"),
-            temperature=float(os.getenv("TEMPERATURE", "0.7"))
+            api_key=_env_value("GROQ_API_KEY"),
+            model=_env_value("MODEL_NAME", "llama-3.1-8b-instant"),
+            temperature=float(_env_value("TEMPERATURE", "0.7"))
         )
         
         # Initialize Tavily client for web search
-        self.tavily = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
+        self.tavily = TavilyClient(api_key=_env_value("TAVILY_API_KEY"))
         
         # Initialize memory for conversation history
         self.memory = ConversationBufferMemory(
@@ -106,6 +126,7 @@ class SupervisorAgent:
         
         # Initialize session-level collection for iteration results
         self.current_session_results = []
+        self._abstract_cache = {}
 
     def _initialize_tools(self) -> List[Tool]:
         """
@@ -207,7 +228,8 @@ class SupervisorAgent:
         )
 
     async def process_query(self, query: str, feedback: Optional[str] = None, 
-                          deep_research: Optional[List[str]] = None) -> Dict[str, Any]:
+                          deep_research: Optional[List[str]] = None,
+                          on_progress=None) -> Dict[str, Any]:
         """
         Process a research query with optional feedback and deep research topics.
         
@@ -224,6 +246,7 @@ class SupervisorAgent:
         """
         try:
             print("\nStarting research process...")
+            _report_progress(on_progress, 0.05, "Generating search queries")
             
             # Clear previous session results
             self.current_session_results = []
@@ -234,6 +257,7 @@ class SupervisorAgent:
             # If feedback provided, incorporate it and modify the query approach
             if feedback:
                 print("Incorporating feedback...")
+                _report_progress(on_progress, 0.08, "Incorporating feedback into the research approach")
                 self._incorporate_feedback(feedback)
                 
                 # Use feedback to refine research approach
@@ -252,25 +276,43 @@ class SupervisorAgent:
             # If deep research topics provided, focus on those
             if deep_research:
                 print("Performing deep research...")
-                return await self._perform_deep_research(query, deep_research)
+                _report_progress(on_progress, 0.1, "Starting deep research")
+                return await self._perform_deep_research(query, deep_research, on_progress)
             
             # Main research loop - run multiple iterations to refine results
+            step_span = 0.75 / max(DEFAULT_ITERATIONS, 1)
             for iteration in range(DEFAULT_ITERATIONS):
                 print(f"\nStarting iteration {iteration + 1} of {DEFAULT_ITERATIONS}")
+                iteration_start = 0.1 + iteration * step_span
                 
                 try:
                     # First, perform web search
                     print("Performing web search...")
+                    _report_progress(
+                        on_progress,
+                        iteration_start,
+                        f"Searching for information (iteration {iteration + 1} of {DEFAULT_ITERATIONS})"
+                    )
                     web_results = await self._web_search({"query": query})
                     print(f"Web search completed. Found {len(web_results.get('academic', [])) + len(web_results.get('general', []))} articles")
                     
                     # Then analyze findings
                     print("\nAnalyzing findings...")
+                    _report_progress(
+                        on_progress,
+                        iteration_start + step_span * 0.35,
+                        f"Analyzing sources (iteration {iteration + 1} of {DEFAULT_ITERATIONS})"
+                    )
                     analysis = await self._analyze_findings({"findings": web_results})
                     print("Analysis completed")
                     
                     # Finally rank sources
                     print("\nRanking sources...")
+                    _report_progress(
+                        on_progress,
+                        iteration_start + step_span * 0.7,
+                        f"Evaluating source credibility (iteration {iteration + 1} of {DEFAULT_ITERATIONS})"
+                    )
                     ranking = await self._rank_sources({
                         "topic": query,
                         "sources": web_results
@@ -299,16 +341,23 @@ class SupervisorAgent:
             
             # Generate final meta-review
             print("\nGenerating meta-review...")
+            _report_progress(on_progress, 0.88, "Generating final research reflection")
             meta_review = await self._generate_meta_review(results)
+
+            print("\nComparing papers on common factors...")
+            _report_progress(on_progress, 0.94, "Comparing papers on common factors")
+            comparison = await self._compare_papers(query, results)
             
             # Now save the combined results to history
             print("\nSaving combined session results to history...")
             self._save_combined_session_results(query, meta_review)
             
             print("Research process completed successfully")
+            _report_progress(on_progress, 1.0, "Research completed")
             return {
                 "cycles": results,
                 "meta_review": meta_review,
+                "comparison": comparison,
                 "options": {
                     "feedback": "Provide feedback to improve the research",
                     "deep_research": "Request deep research on specific topics",
@@ -424,7 +473,7 @@ class SupervisorAgent:
                     
                     content = source.get('content', '')
                     if isinstance(content, str):
-                        content = content[:300] + '...' if len(content) > 300 else content
+                        content = content[:1800]
                     
                     # Determine source type
                     source_type = "academic" if any(domain in url for domain in SOURCES["academic"]) else "general"
@@ -453,6 +502,9 @@ class SupervisorAgent:
     def _extract_publication_date(self, source: Dict) -> str:
         """Extract publication date from source content."""
         try:
+            explicit = source.get("pub_date") or source.get("published_date")
+            if explicit:
+                return str(explicit)
             content = source.get('content', '')
             if not isinstance(content, str):
                 return ""
@@ -475,6 +527,11 @@ class SupervisorAgent:
     def _extract_citation_count(self, source: Dict) -> int:
         """Extract citation count from source content."""
         try:
+            explicit = source.get("citation_count")
+            if isinstance(explicit, int):
+                return explicit
+            if isinstance(explicit, str) and explicit.isdigit():
+                return int(explicit)
             content = source.get('content', '')
             if not isinstance(content, str):
                 return 0
@@ -493,6 +550,236 @@ class SupervisorAgent:
             pass
             
         return 0
+
+    def _is_search_limit_error(self, exc: Exception) -> bool:
+        """True when Tavily refused the search because the plan or rate limit was hit."""
+        text = str(exc).lower()
+        markers = (
+            "429", "432", "402", "quota", "rate limit", "credit",
+            "usage limit", "too many requests", "exceeds your plan",
+            "monthly", "plan limit",
+        )
+        return any(marker in text for marker in markers)
+
+    def _openalex_abstract(self, inverted_index: Any) -> str:
+        """Rebuild a readable abstract from OpenAlex's word-position index."""
+        if not isinstance(inverted_index, dict):
+            return ""
+        positions = []
+        for word, indexes in inverted_index.items():
+            if not isinstance(indexes, list):
+                continue
+            for index in indexes:
+                if isinstance(index, int):
+                    positions.append((index, str(word)))
+        positions.sort()
+        return " ".join(word for _, word in positions)
+
+    def _openalex_search(self, query: str, max_results: int) -> Dict[str, Any]:
+        """Search OpenAlex and return the same result shape Tavily uses."""
+        response = requests.get(
+            "https://api.openalex.org/works",
+            params={
+                "search": query,
+                "per-page": max(1, min(int(max_results), 10)),
+            },
+            headers={"User-Agent": "ResearchIQ/1.0 (academic research assistant)"},
+            timeout=30,
+        )
+        response.raise_for_status()
+        results = []
+        for work in response.json().get("results", []):
+            location = work.get("primary_location") or {}
+            open_access = work.get("open_access") or {}
+            url = (
+                work.get("doi")
+                or open_access.get("oa_url")
+                or location.get("landing_page_url")
+                or work.get("id")
+                or ""
+            )
+            if not url:
+                continue
+            year = work.get("publication_year") or ""
+            citations = work.get("cited_by_count") or 0
+            abstract = self._openalex_abstract(work.get("abstract_inverted_index"))
+            content = abstract or work.get("display_name") or ""
+            if year:
+                content = f"{content} published: {year}".strip()
+            if citations:
+                content = f"{content} citations: {citations}".strip()
+            results.append({
+                "title": work.get("display_name") or "Untitled",
+                "url": url,
+                "content": content,
+                "pub_date": str(year) if year else "",
+                "citation_count": int(citations) if isinstance(citations, int) else 0,
+            })
+        print(f"OpenAlex returned {len(results)} sources for: {query}")
+        return {"results": results}
+
+    def _search_sources(self, query: str, max_results: int) -> Dict[str, Any]:
+        """Search Tavily, and use OpenAlex when Tavily is out of credits."""
+        if getattr(self, "_tavily_blocked", False):
+            return self._openalex_search(query, max_results)
+        try:
+            result = self.tavily.search(
+                query=query,
+                search_depth="advanced",
+                max_results=max_results,
+            )
+            if isinstance(result, dict) and result.get("error"):
+                raise RuntimeError(str(result.get("error")))
+            return result
+        except Exception as exc:
+            if not self._is_search_limit_error(exc):
+                raise
+            self._tavily_blocked = True
+            print(f"Tavily search limit reached. Using OpenAlex instead. ({exc})")
+            return self._openalex_search(query, max_results)
+
+    def _same_paper(self, query_title: str, matched_title: str) -> bool:
+        """Accept an OpenAlex hit only when it is the same paper, not a similar title."""
+        if not query_title or not matched_title:
+            return False
+        if "retract" in matched_title.lower():
+            return False
+
+        def clean(text: str) -> str:
+            text = re.sub(r"\.\.\.|\(pdf\)", " ", text or "", flags=re.IGNORECASE)
+            parts = [part.strip() for part in re.split(r"\s+\|\s+", text) if part.strip()]
+            if len(parts) == 2:
+                left, right = parts
+                if len(left.split()) <= 2:
+                    text = right
+                elif len(right.split()) <= 3:
+                    text = left
+            return text
+
+        stop = {"using", "with", "and", "for", "the", "from", "that", "this", "into", "over"}
+        def tokens(text: str) -> List[str]:
+            return [
+                word for word in re.findall(r"[a-z0-9]+", clean(text).lower())
+                if len(word) > 2 and word not in stop
+            ]
+        query_tokens = tokens(query_title)
+        matched_tokens = set(tokens(matched_title))
+        if len(query_tokens) < 4 or len(matched_tokens) < 4:
+            return False
+        return all(word in matched_tokens for word in query_tokens)
+
+    def _openalex_by_title(self, title: str) -> Dict[str, Any]:
+        """Load the abstract of a paper when the search snippet is too short to name its dataset."""
+        cache_key = re.sub(r"\s+", " ", (title or "").strip().lower())
+        if not cache_key:
+            return {}
+        if cache_key in self._abstract_cache:
+            return self._abstract_cache[cache_key]
+        found: Dict[str, Any] = {}
+        try:
+            response = requests.get(
+                "https://api.openalex.org/works",
+                params={"search": re.sub(r"\.\.\.", " ", title)[:180], "per-page": 5},
+                headers={"User-Agent": "ResearchIQ/1.0 (academic research assistant)"},
+                timeout=30,
+            )
+            response.raise_for_status()
+            for work in response.json().get("results", []):
+                matched = work.get("display_name") or ""
+                if not self._same_paper(title, matched):
+                    continue
+                abstract = self._openalex_abstract(work.get("abstract_inverted_index"))
+                if len(abstract) < 80:
+                    continue
+                year = work.get("publication_year") or ""
+                citations = work.get("cited_by_count") or 0
+                found = {
+                    "title": matched,
+                    "content": abstract[:1800],
+                    "pub_date": str(year) if year else "",
+                    "citation_count": int(citations) if isinstance(citations, int) else 0,
+                }
+                break
+        except Exception as exc:
+            print(f"OpenAlex abstract lookup failed: {exc}")
+        self._abstract_cache[cache_key] = found
+        return found
+
+    def _source_facts(self, content: str) -> Dict[str, List[str]]:
+        """Pull dataset names, methods, metrics, and numbers straight from the source text."""
+        buckets = {"dataset": [], "method": [], "metrics": [], "results": [], "limitation": []}
+        sentences = re.split(r"(?<=[.!?])\s+|\n+", content or "")
+        for sentence in sentences:
+            text = " ".join(sentence.split())
+            if len(text) < 35:
+                continue
+            low = text.lower()
+            if any(word in low for word in (
+                "dataset", "data set", "pima", "pidd", "uci repository", "cohort", "records from"
+            )):
+                buckets["dataset"].append(text)
+            if any(word in low for word in (
+                "random forest", "gradient boosting", "xgboost", "support vector", "svm",
+                "logistic regression", "decision tree", "naive bayes", "k-nearest", "knn",
+                "neural network", "adaboost", "smote", "adasyn"
+            )):
+                buckets["method"].append(text)
+            if any(word in low for word in (
+                "accuracy", "f1", "auc", "precision", "recall", "roc", "sensitivity", "specificity"
+            )):
+                if re.search(r"\d", text):
+                    buckets["results"].append(text)
+                else:
+                    buckets["metrics"].append(text)
+            if any(word in low for word in (
+                "limitation", "lack of", "restricted demographic", "without external", "single-site", "single site"
+            )):
+                buckets["limitation"].append(text)
+        for key, lines in buckets.items():
+            unique = []
+            for line in lines:
+                short = line[:320]
+                if short not in unique:
+                    unique.append(short)
+            buckets[key] = unique[:3]
+        return buckets
+
+    def _enrich_sources(self, categorized: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        """Replace a short snippet with the paper abstract so dataset names are still present."""
+        checked = 0
+        for group in ("academic", "general"):
+            for source in categorized.get(group, []):
+                content = source.get("content") or ""
+                facts = self._source_facts(content)
+                if facts["dataset"] and len(content) > 700:
+                    continue
+                if checked >= 12:
+                    return categorized
+                checked += 1
+                match = self._openalex_by_title(source.get("title", ""))
+                abstract = match.get("content") or ""
+                if not abstract:
+                    continue
+                if abstract not in content:
+                    source["content"] = f"{abstract} {content}".strip()[:1800]
+                    print(f"Attached abstract for: {source.get('title', '')[:80]}")
+                if match.get("pub_date") and not source.get("pub_date"):
+                    source["pub_date"] = match["pub_date"]
+                if match.get("citation_count") and not source.get("citation_count"):
+                    source["citation_count"] = match["citation_count"]
+        return categorized
+
+    def _stated_text(self, value: Any, facts: List[str]) -> str:
+        """Keep a model phrase only when it states a fact. Otherwise use the source sentence."""
+        text = value.strip() if isinstance(value, str) else ""
+        missing = re.search(
+            r"not reported|not stated|do not state|did not report|not assessed|sources do not",
+            text,
+            re.IGNORECASE,
+        )
+        if text and not missing:
+            return text
+        return " ".join(facts[:2]).strip()
 
     async def _web_search(self, input_data: Dict) -> Dict[str, Any]:
         """
@@ -525,10 +812,9 @@ class SupervisorAgent:
             search_count = 0
             
             # Perform academic search with primary query
-            academic_results = self.tavily.search(
-                query=f"{query} filetype:pdf OR research paper",
-                search_depth="advanced",
-                max_results=8  # Increased from 5
+            academic_results = self._search_sources(
+                f"{query} filetype:pdf OR research paper",
+                8,
             )
             
             # Process academic results
@@ -543,11 +829,7 @@ class SupervisorAgent:
                     break
                     
                 try:
-                    technical_results = self.tavily.search(
-                        query=tech_query,
-                        search_depth="advanced",
-                        max_results=5
-                    )
+                    technical_results = self._search_sources(tech_query, 5)
                     
                     if technical_results:
                         tech_processed = self._process_sources(technical_results)
@@ -569,6 +851,7 @@ class SupervisorAgent:
                         seen_urls.add(url)
                         deduplicated[source_type].append(source)
             
+            deduplicated = self._enrich_sources(deduplicated)
             total_results = len(deduplicated["academic"]) + len(deduplicated["general"])
             print(f"Total sources found after deduplication: {total_results}")
             
@@ -577,6 +860,28 @@ class SupervisorAgent:
         except Exception as e:
             print(f"Error in web search: {str(e)}")
             return {"academic": [], "general": []}
+
+    def _brief_source(self, source: Dict) -> Dict[str, Any]:
+        """Short source card for the model. The 8,000-token Groq limit cannot hold full abstracts."""
+        content = source.get("content") or ""
+        facts = self._source_facts(content)
+        card = {"title": (source.get("title") or "")[:140]}
+        for key in ("dataset", "method", "results", "limitation"):
+            lines = [line[:160] for line in facts.get(key, [])[:1]]
+            if lines:
+                card[key] = lines
+        if len(card) == 1:
+            card["excerpt"] = content[:160]
+        return card
+
+    def _brief_findings(self, findings: Dict) -> Dict[str, List[Dict[str, Any]]]:
+        packed = {}
+        for group in ("academic", "general"):
+            packed[group] = [
+                self._brief_source(source)
+                for source in (findings.get(group) or [])[:6]
+            ]
+        return packed
 
     async def _analyze_findings(self, input_data: Dict) -> Dict[str, Any]:
         """
@@ -597,6 +902,8 @@ class SupervisorAgent:
             Analyze these research findings and extract key insights:
             {findings}
             
+            Keep every dataset name and every numeric result exactly as written in the findings. Do not replace a named dataset, such as Pima or PID, with a general description.
+            
             Return a JSON object with this exact structure:
             {{
                 "key_concepts": ["concept1", "concept2", ...],
@@ -608,7 +915,9 @@ class SupervisorAgent:
             """)
             
             chain = prompt | self.llm | JsonOutputParser()
-            result = await chain.ainvoke({"findings": json.dumps(findings, indent=2)})
+            result = await chain.ainvoke({
+                "findings": json.dumps(self._brief_findings(findings), separators=(",", ":"))
+            })
             
             # Ensure the result has all required fields
             return {
@@ -673,23 +982,26 @@ class SupervisorAgent:
             # Short prompt for LLM ranking to avoid token issues
             prompt = ChatPromptTemplate.from_template("""
             Rank these sources for research on: {topic}
+
+            Sources:
+            {sources}
             
             For each source, rate (1-10):
             - Relevance: How well it addresses the topic
             - Credibility: Source authority and reliability
             - Technical depth: Level of technical detail
             
-            Return a JSON array of objects with:
+            Return only a JSON array of objects with:
             - source_idx: index of the source in the input list
             - overall_score: combined score (float, 0-10)
             - relevance: relevance score (float, 0-10)
             - credibility: credibility score (float, 0-10)
             - technical_depth: technical depth score (float, 0-10)
-            - key_insights: ["insight1", "insight2", ...] (1-3 key insights)
+            - key_insights: ["insight1", "insight2", ...] (1-3 key insights, and include any named dataset or numeric result)
             
             Example:
             [
-              {{"source_idx": 0, "overall_score": 8.5, "relevance": 9, "credibility": 8, "technical_depth": 7, "key_insights": ["insight1"]}},
+              {{"source_idx": 0, "overall_score": 8.5, "relevance": 9, "credibility": 8, "technical_depth": 7, "key_insights": ["Uses the Pima dataset and reports 89% accuracy"]}},
               {{"source_idx": 1, "overall_score": 7.2, "relevance": 8, "credibility": 7, "technical_depth": 6, "key_insights": ["insight2"]}}
             ]
             """)
@@ -701,7 +1013,7 @@ class SupervisorAgent:
                     "idx": i,
                     "title": source.get("title", "Untitled"),
                     "url": source.get("url", ""),
-                    "content_snippet": source.get("content", "")[:150],  # Limit content length
+                    "content_snippet": self._brief_source(source),
                     "source_type": source.get("source_type", "general")
                 })
             
@@ -1122,21 +1434,31 @@ class SupervisorAgent:
         try:
             # Create a more token-efficient version of results for the meta-review
             compact_results = []
+            stated_facts = []
+            seen_titles = set()
             for result in results:
-                # Extract only essential information
+                source_facts = []
+                for source in result.get("ranking", {}).get("ranked_sources", []):
+                    facts = self._source_facts(source.get("content") or "")
+                    if not any(facts.values()):
+                        continue
+                    entry = {
+                        "title": source.get("title", ""),
+                        "dataset": facts["dataset"],
+                        "method": facts["method"],
+                        "metrics": facts["metrics"],
+                        "results": facts["results"],
+                        "limitation": facts["limitation"],
+                    }
+                    source_facts.append(entry)
+                    if entry["title"] not in seen_titles:
+                        seen_titles.add(entry["title"])
+                        stated_facts.append(entry)
                 compact_result = {
                     "cycle": result.get("cycle", 0),
-                    "hypothesis": result.get("hypothesis", ""),
-                    "key_concepts": result.get("reflection", {}).get("key_concepts", []),
-                    "analysis_summary": result.get("reflection", {}).get("analysis", "")[:300],  # Limit text length
-                    "top_sources": [
-                        {
-                            "title": s.get("title", ""),
-                            "score": s.get("overall_score", 0),
-                            "key_insights": s.get("key_insights", [])[:2]  # Limit insights
-                        }
-                        for s in result.get("ranking", {}).get("ranked_sources", [])[:3]  # Only top 3 sources
-                    ]
+                    "hypothesis": (result.get("hypothesis") or "")[:180],
+                    "key_concepts": result.get("reflection", {}).get("key_concepts", [])[:5],
+                    "analysis_summary": (result.get("reflection", {}).get("analysis") or "")[:220],
                 }
                 compact_results.append(compact_result)
             
@@ -1155,13 +1477,52 @@ class SupervisorAgent:
                     "coverage": "brief assessment",
                     "depth": "brief assessment",
                     "gaps": ["gap1", "gap2", ...]
+                }},
+                "paper": {{
+                    "research_problem": "The problem this body of work is trying to solve",
+                    "methodology": "How existing work approaches the problem",
+                    "dataset": "Name every dataset written in stated_facts, including Pima, PID, or PIDD",
+                    "evaluation_metrics": ["each metric written in the source text"],
+                    "key_results": ["each numeric result, copied from the source text"],
+                    "limitations": ["each limitation written in the source text"],
+                    "research_gap": "What existing work still does not answer"
                 }}
             }}
+
+            Copy dataset names and numbers from stated_facts. Do not invent figures. Leave a field as an empty string when the text has no such fact. Never write "Not reported" or "sources do not state".
             """)
             
             chain = prompt | self.llm | JsonOutputParser()
-            result = await chain.ainvoke({"results": json.dumps(compact_results, indent=2)})
-            
+            slim_facts = [
+                {
+                    "title": item["title"][:120],
+                    "dataset": [line[:160] for line in item["dataset"][:1]],
+                    "results": [line[:160] for line in item["results"][:1]],
+                }
+                for item in stated_facts[:8]
+            ]
+            result = await chain.ainvoke({
+                "results": json.dumps(
+                    {"cycles": compact_results, "stated_facts": slim_facts},
+                    separators=(",", ":"),
+                )
+            })
+            if isinstance(result, dict):
+                paper = result.setdefault("paper", {})
+                dataset_lines, metric_lines, result_lines, limit_lines = [], [], [], []
+                for item in stated_facts:
+                    dataset_lines.extend(f"{item['title']}: {line}" for line in item["dataset"])
+                    metric_lines.extend(item["metrics"])
+                    result_lines.extend(f"{item['title']}: {line}" for line in item["results"])
+                    limit_lines.extend(item["limitation"])
+                if dataset_lines:
+                    paper["dataset"] = dataset_lines[:8]
+                if result_lines:
+                    paper["key_results"] = result_lines[:8]
+                if metric_lines:
+                    paper["evaluation_metrics"] = metric_lines[:6]
+                if limit_lines:
+                    paper["limitations"] = limit_lines[:4]
             return result
             
         except Exception as e:
@@ -1176,7 +1537,148 @@ class SupervisorAgent:
                     "coverage": "Not assessed due to error",
                     "depth": "Not assessed due to error",
                     "gaps": ["Assessment incomplete due to error"]
+                },
+                "paper": {
+                    "research_problem": "Not assessed due to error",
+                    "methodology": "Not assessed due to error",
+                    "dataset": "Not assessed due to error",
+                    "evaluation_metrics": [],
+                    "key_results": [],
+                    "limitations": [],
+                    "research_gap": "Not assessed due to error"
                 }
+            }
+
+    async def _compare_papers(self, query: str, results: List[Dict]) -> Dict[str, Any]:
+        """Compare the top papers on the same factors so differences are visible together."""
+        empty = {"factors": [], "papers": [], "differences": []}
+        try:
+            seen = set()
+            papers = []
+            for result in results:
+                ranked = result.get("ranking", {}).get("ranked_sources", [])
+                for source in ranked:
+                    url = source.get("url") or source.get("title")
+                    if not url or url in seen:
+                        continue
+                    seen.add(url)
+                    content = source.get("content") or ""
+                    facts = self._source_facts(content)
+                    papers.append({
+                        "title": source.get("title", "Untitled"),
+                        "url": source.get("url", ""),
+                        "year": source.get("pub_date", ""),
+                        "facts": facts,
+                        "excerpt": content[:180],
+                        "score": source.get("overall_score", 0),
+                    })
+            papers = sorted(
+                papers,
+                key=lambda item: (
+                    1 if item["facts"]["dataset"] or item["facts"]["results"] else 0,
+                    item.get("score", 0),
+                ),
+                reverse=True,
+            )[:8]
+            if len(papers) < 2:
+                return empty
+
+            fact_rows = []
+            for paper in papers:
+                facts = paper["facts"]
+                row = {
+                    "title": paper["title"],
+                    "url": paper["url"],
+                    "methodology": self._stated_text("", facts["method"]),
+                    "dataset": self._stated_text("", facts["dataset"]),
+                    "metrics": self._stated_text("", facts["metrics"]),
+                    "key_result": self._stated_text("", facts["results"]),
+                    "limitation": self._stated_text("", facts["limitation"]),
+                }
+                if any(row[key] for key in ("methodology", "dataset", "metrics", "key_result", "limitation")):
+                    fact_rows.append(row)
+
+            prompt = ChatPromptTemplate.from_template("""
+            Compare these papers on the same factors for the question: {query}
+            Papers:
+            {papers}
+
+            Return a JSON object with:
+            {{
+                "factors": ["Methodology", "Dataset", "Evaluation metrics", "Key result", "Limitation"],
+                "papers": [
+                    {{
+                        "title": "paper title",
+                        "url": "paper url",
+                        "methodology": "method named in the excerpt or facts",
+                        "dataset": "dataset name copied from the text",
+                        "metrics": "metrics named in the text",
+                        "key_result": "numeric result copied from the text",
+                        "limitation": "limitation copied from the text"
+                    }}
+                ],
+                "differences": ["one sentence on how the papers differ"]
+            }}
+
+            Copy dataset names and numbers from the supplied facts. Do not invent figures. Use an empty string when a fact is absent. Never write "Not reported".
+            """)
+            chain = prompt | self.llm | JsonOutputParser()
+            compared = await chain.ainvoke({
+                "query": query,
+                "papers": json.dumps(
+                    [
+                        {
+                            "title": paper["title"],
+                            "url": paper["url"],
+                            "facts": {
+                                key: [line[:160] for line in values[:1]]
+                                for key, values in paper["facts"].items()
+                                if values
+                            },
+                        }
+                        for paper in papers
+                    ],
+                    separators=(",", ":"),
+                ),
+            })
+            if not isinstance(compared, dict):
+                return {
+                    "factors": ["Methodology", "Dataset", "Evaluation metrics", "Key result", "Limitation"],
+                    "papers": fact_rows,
+                    "differences": [],
+                }
+            compared.setdefault("factors", ["Methodology", "Dataset", "Evaluation metrics", "Key result", "Limitation"])
+            compared.setdefault("differences", [])
+            by_url = {row["url"]: row for row in fact_rows}
+            merged = []
+            seen_urls = set()
+            for row in compared.get("papers") or []:
+                if not isinstance(row, dict):
+                    continue
+                facts = by_url.get(row.get("url"), {})
+                filled = {
+                    "title": row.get("title") or facts.get("title", ""),
+                    "url": row.get("url", ""),
+                    "methodology": self._stated_text(row.get("methodology"), [facts.get("methodology", "")]),
+                    "dataset": self._stated_text(row.get("dataset"), [facts.get("dataset", "")]),
+                    "metrics": self._stated_text(row.get("metrics"), [facts.get("metrics", "")]),
+                    "key_result": self._stated_text(row.get("key_result"), [facts.get("key_result", "")]),
+                    "limitation": self._stated_text(row.get("limitation"), [facts.get("limitation", "")]),
+                }
+                if any(filled[key] for key in ("methodology", "dataset", "metrics", "key_result", "limitation")):
+                    merged.append(filled)
+                    seen_urls.add(filled["url"])
+            for row in fact_rows:
+                if row["url"] not in seen_urls:
+                    merged.append(row)
+            compared["papers"] = merged
+            return compared
+        except Exception as exc:
+            print(f"Error comparing papers: {exc}")
+            return {
+                "factors": ["Methodology", "Dataset", "Evaluation metrics", "Key result", "Limitation"],
+                "papers": [],
+                "differences": [],
             }
 
     def _load_history(self) -> None:
@@ -1315,14 +1817,20 @@ class SupervisorAgent:
         
         return "\n".join(output)
 
-    async def _perform_deep_research(self, query: str, topics: List[str]) -> Dict[str, Any]:
+    async def _perform_deep_research(self, query: str, topics: List[str], on_progress=None) -> Dict[str, Any]:
         """Perform in-depth research on specific topics with advanced reasoning."""
         try:
             print(f"Starting deep research on {len(topics)} topics related to {query}")
             
             deep_results = {}
-            for topic in topics:
+            topic_count = max(len(topics), 1)
+            for index, topic in enumerate(topics):
                 print(f"\nResearching topic: {topic}")
+                _report_progress(
+                    on_progress,
+                    0.15 + (0.7 * index / topic_count),
+                    f"Researching topic {index + 1} of {len(topics)}: {topic}"
+                )
                 
                 # Perform specialized search for this topic
                 search_results = await self._web_search({
@@ -1407,6 +1915,7 @@ class SupervisorAgent:
                 print(f"Completed deep research on topic: {topic}")
             
             # Generate synthesis across all deep research topics
+            _report_progress(on_progress, 0.9, "Synthesizing deep research findings")
             synthesis_prompt = ChatPromptTemplate.from_template("""
             Synthesize findings across these deep research topics:
             Topics: {topics}
@@ -1468,6 +1977,7 @@ class SupervisorAgent:
             }
             
             print("\nDeep research completed successfully")
+            _report_progress(on_progress, 1.0, "Deep research completed")
             return final_results
             
         except Exception as e:

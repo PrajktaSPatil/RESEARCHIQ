@@ -10,7 +10,7 @@ load_dotenv()
 
 # Set page config for Streamlit application
 st.set_page_config(
-    page_title="The Second Mind",
+    page_title="ResearchIQ",
     page_icon="🧠",
     layout="wide"  # Use wide layout for better visualization of research data
 )
@@ -69,7 +69,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Application header
-st.title("🧠 The Second Mind")
+st.title("🧠 ResearchIQ")
 st.markdown("""
     An AI-powered research assistant that learns and improves with each interaction.
     Enter your research query below to begin.
@@ -123,7 +123,7 @@ if hasattr(st.session_state.assistant, 'memory_store') and st.session_state.assi
             if isinstance(item, dict) and 'top_sources' in item:
                 top_sources = item['top_sources']
             elif hasattr(item, 'top_sources'):
-                top_sources = item.top_sources
+                top_sources = item.top_sources # type: ignore
             
             if top_sources:
                 st.markdown("**Top Sources:**")
@@ -147,9 +147,9 @@ if hasattr(st.session_state.assistant, 'memory_store') and st.session_state.assi
             if isinstance(item, dict) and 'summary' in item and item['summary']:
                 st.markdown("**Summary:**")
                 st.markdown(item['summary'][:200] + "..." if len(item['summary']) > 200 else item['summary'])
-            elif hasattr(item, 'summary') and item.summary:
+            elif hasattr(item, 'summary') and item.summary: # type: ignore
                 st.markdown("**Summary:**")
-                st.markdown(item.summary[:200] + "..." if len(item.summary) > 200 else item.summary)
+                st.markdown(item.summary[:200] + "..." if len(item.summary) > 200 else item.summary) # type: ignore
             
             # Show feedback if available
             if isinstance(item, dict) and 'feedback' in item and item['feedback']:
@@ -557,4 +557,4 @@ if st.session_state.results and "error" not in st.session_state.results:
 
 # Footer
 st.markdown("---")
-st.markdown("Built with ❤️ using Streamlit and The Second Mind") 
+st.markdown("Built with ❤️ using Streamlit and ResearchIQ") 

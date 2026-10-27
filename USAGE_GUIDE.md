@@ -1,6 +1,6 @@
-# 🧠 The Second Mind - Detailed Usage Guide
+# 🧠 ResearchIQ - Detailed Usage Guide
 
-This guide provides step-by-step instructions on how to use The Second Mind research assistant effectively, including examples and best practices.
+This guide provides step-by-step instructions on how to use ResearchIQ research assistant effectively, including examples and best practices.
 
 ## 🚀 Getting Started
 

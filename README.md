@@ -1,4 +1,4 @@
-# 🧠 The Second Mind
+# 🧠 ResearchIQ
 
 A sophisticated AI research assistant system that mimics human learning by retaining preferences, connecting ideas across topics, and continuously improving with each interaction.
 
@@ -12,9 +12,9 @@ A sophisticated AI research assistant system that mimics human learning by retai
 
 ## 📋 Overview
 
-The Second Mind is a coalition of specialized AI agents that work together to perform comprehensive research on any topic. The system leverages Large Language Models (LLMs) and real-time web data extraction to create a research experience that becomes increasingly personalized and intelligent over time.
+ResearchIQ is a coalition of specialized AI agents that work together to perform comprehensive research on any topic. The system leverages Large Language Models (LLMs) and real-time web data extraction to create a research experience that becomes increasingly personalized and intelligent over time.
 
-Unlike traditional search engines or AI assistants, The Second Mind implements a multi-agent, iterative research process that refines outputs through multiple cycles. It analyzes source credibility, extracts key concepts, identifies trends and gaps, and synthesizes findings into coherent, insightful research reports.
+Unlike traditional search engines or AI assistants, ResearchIQ implements a multi-agent, iterative research process that refines outputs through multiple cycles. It analyzes source credibility, extracts key concepts, identifies trends and gaps, and synthesizes findings into coherent, insightful research reports.
 
 ## 🎯 Problem Statement
 
@@ -82,8 +82,8 @@ The challenge was to develop a system of AI agents that mimics human learning—
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/second-mind.git
-   cd second-mind
+   git clone https://github.com/yourusername/researchiq.git
+   cd researchiq
    ```
 
 2. Install required dependencies:
@@ -95,7 +95,7 @@ The challenge was to develop a system of AI agents that mimics human learning—
    ```
    GROQ_API_KEY="your_groq_api_key"
    TAVILY_API_KEY="your_tavily_api_key"
-   MODEL_NAME="llama-3.3-70b-versatile"
+   MODEL_NAME="openai/gpt-oss-120b"
    TEMPERATURE=0.7
    MAX_HISTORY=10
    DEFAULT_ITERATIONS=3
