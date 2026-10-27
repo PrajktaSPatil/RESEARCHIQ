@@ -2,7 +2,6 @@
 
 A sophisticated AI research assistant system that mimics human learning by retaining preferences, connecting ideas across topics, and continuously improving with each interaction.
 
-> **🏆 Recognition**: This project was developed for the Bosch x IITH competition and was selected as one of the top 20 teams out of more than 300 participating teams.
 
 ## 👥 Team Members
 
