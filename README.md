@@ -6,9 +6,10 @@ A sophisticated AI research assistant system that mimics human learning by retai
 
 ## 👥 Team Members
 
-- **Aditya Chavan** (Team Leader) - [LinkedIn](https://www.linkedin.com/in/aditya-chavan-5117aa268/)
-- **Saumya Shah** - [LinkedIn](https://www.linkedin.com/in/saumya-shah-9b2579273/)
-- **Bhavin Baldota** - [LinkedIn](https://www.linkedin.com/in/bhavin-baldota-103553234/)
+- **PRAJKTA PATIL** (Team Leader) -https://www.linkedin.com/in/prajkta-patil-7233a5262/
+- **SRUSHTI PATEL** - (https://www.linkedin.com/in/srushti-patel-b03585319/)
+- **SANCHITA MOTE** -(https://www.linkedin.com/in/sanchita-mote16/)
+- **SAMARTH PATIL**-https://www.linkedin.com/in/samarth-patil-26a7aa31b/
 
 ## 📋 Overview
 
